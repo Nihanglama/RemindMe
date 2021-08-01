@@ -1,18 +1,16 @@
-from functools import singledispatch
-from tkinter import messagebox
+from tkinter import font, messagebox,ttk
 import tkinter as tk
-from time import strftime
+from time import sleep, strftime
 from tkinter import *
 from tkinter.ttk import *
+  
+
 def main():
     window= tk.Tk()
     window.title("REMIND_ME")
     window.geometry("800x800")
     window.configure(bg="black")
     window.resizable(False,False)
-    logo=PhotoImage(file="notification.png")
-    window.iconphoto(False,logo)
-
     label1=tk.Label(fg='white',font=("itallic",20),bg="black")
     label1.pack(anchor="n")
     label=tk.Label(text="REMAIN UPTO DATE",foreground="white",bg="green",font=("Itallic",20),height=5,width=100)
@@ -21,21 +19,51 @@ def main():
     text_area=tk.Label(text="Recent events to show",fg="black",bg="white",width=500,height=10,pady=5,padx=5)
     text_area.pack()
 
-    view_btn=tk.Button(command=lambda:view_Events(),font="itallic",bg="black",fg="blue",text="View_allEvents",padx=30,pady=10)
-    view_btn.place(x=300,y=470)
-    view_btn.configure(activebackground='navy',activeforeground='black')
-
     add_btn=tk.Button(command=lambda:add_event(),font="itallic",bg="black",fg="blue",text="Add_Events",padx=30,pady=10)
     add_btn.place(x=310,y=400)
     add_btn.configure(activebackground='navy',activeforeground='black')
 
+    alram_btn=tk.Button(window,command=lambda:add_alram(),text="Add_alaram",font="itallic",bg="black",fg="blue",padx=30,pady=10)
+    alram_btn.place(x=310,y=470)
+    alram_btn.configure(activebackground='navy',activeforeground='black')
+
+    view_btn=tk.Button(command=lambda:view_Events(),font="itallic",bg="black",fg="blue",text="View_allEvents",padx=30,pady=10)
+    view_btn.place(x=300,y=550)
+    view_btn.configure(activebackground='navy',activeforeground='black')
+
+    def check():
+        c_time=strftime("%H:%M:%p")
+        lis1=[]
+        try:
+            f=open('Time.txt','r')
+            for line in f.readlines():
+                words=line.replace('\n','')
+                words=words.split(',')
+                lis1.append(words)
+            f.close()
+        except FileNotFoundError as e:
+            f=open('Time.txt','w')
+            f.close()
+        print(c_time)
+
+        for i in range(len(lis1)):
+            a_time=":".join(lis1[i])
+        
+            if a_time==c_time:
+                text_area.config(text=c_time)
+                print(a_time)
+                messagebox.showinfo("Reminder","Wake UP Wake UP......")
+  
+        text_area.after(60000,check)
+        
+    check()
+
+    # check()  
 
     def time():
         string = strftime('%H:%M:%S:%p')
         label1.config(text=string)
         label1.after(1000,time)
-
-
     time()
 
     tk.mainloop()
@@ -104,6 +132,7 @@ def add_event():
     enter_btn=tk.Button(window1,font="itallic",bg="black",fg="blue",text="ADD",padx=30,pady=10,command=lambda:inputs())
     enter_btn.configure(activebackground='pink',cursor='dot')
     enter_btn.pack(side=TOP)
+
     mainloop()
    
 
@@ -121,7 +150,7 @@ def view_Events():
         for i in f.readlines():
             info=i.split(',')
             lis.append(info)
-
+        f.close()
         for i in range(len(lis)):
             for j in range(len(lis[0])):
                 show=tk.Entry(window2, width=20, fg='blue',bg='yellow',font=('Arial',16,'bold'))
@@ -133,23 +162,110 @@ def view_Events():
         messagebox.showerror("no file","File not found 404")
 
 
+def add_alram():
+    window3=tk.Tk()
+    window3.configure(bg="black")
+    window3.title("Set_Alram")
+    window3.geometry("500x600")
+    # window3.resizable(False,False)
+    inps=ttk.LabelFrame(window3,text="Forms",border=5,borderwidth=10)
+    inps.pack(fill='both',expand='yes')
+    show1=tk.Label(inps,text="Hours",fg="black")
+    show1.pack()
+    inp1=tk.Entry(inps,fg="black",bd=5)
+    inp1.pack()
+    show2=tk.Label(inps,text="Minutes",fg="black")
+    show2.pack()
+    inp2=tk.Entry(inps,fg="black",bd=5)
+    inp2.pack()
+    show3=tk.Label(inps,text="AM/PM",fg="black")
+    show3.pack()
+    inp3=tk.Entry(inps,fg="black",bd=5)
+    inp3.pack()
+    set_btn=tk.Button(inps,text="SET",bg="black",fg="white",padx=20,pady=10,bd=3,command=lambda:inputs())
+    set_btn.pack()
+    set_btn.configure(activebackground="skyblue")
+
+
+    def clear():
+        inp1.delete(0,END)
+        inp2.delete(0,END)
+        inp3.delete(0,END)
+
+    def inputs():
+       global hour
+       global minute
+       global specifier
+    
+       hour=inp1.get()
+       minute=inp2.get()
+       specifier=inp3.get()
+       
+
+       if hour=="" or minute=="" or specifier=="":
+           messagebox.showwarning("Error 300","Please fillup all the inputs")
+           clear()
+       elif hour.isalpha() or minute.isalpha() or specifier.isdigit():
+           messagebox.showwarning("Error 102","Wrong input format")
+           messagebox.showinfo("Guide","format: \n hour:__\nminute:__\nSpecifier:AM/PM")
+           clear()
+
+       else:
+            messagebox.showinfo("200 ok","info added sucessfully")
+            global m
+            global hr
+            m=int(minute)
+            hr=int(hour)
+            if int(m)>=60:
+                hr+=int(m/60)
+                m=(m%60)
+            if int(hr)>12:
+                 hr=(hr%12)
+
+            f=open("Time.txt",'a')
+
+            f.writelines("{},{},{}\n".format(hr,m,specifier))  
+            f.close()
+            window3.destroy()   
+    show_al_btn=tk.Button(window3,text="Show Alaram",fg="white",bg="black",bd=4,command=lambda:show())
+    show_al_btn.pack()
+    def show():
+        show_al_btn.destroy()
+        f=open('Time.txt','r')
+        lis=[]
+        for line in f.readlines():
+            words=line.replace('\n','')
+            words=words.split(',')
+            lis.append(words)
+        f.close()
+        def delete():
+            f=open("Time.txt",'r+')
+            f.truncate(0)
+            messagebox.showwarning("Deleting","Are you sure to delete ?")
+            frame.destroy()
+
+
+        frame=ttk.LabelFrame(window3,text="Alram",borderwidth=10,border=5)
+        frame.pack(fill='both',expand='yes')
+        print(lis)
+        if len(lis)!=0:
+            for i in range(len(lis)):
+                j=50
+                show=tk.Label(frame,fg='blue',font=('Arial',16,'bold'),text=lis[i])
+                show.pack(side=TOP)
+            
+                j+=50
+
+            del_btn=tk.Button(frame,fg='white',bg='black',padx=3,pady=5,text="delete",bd=3,command=lambda:delete())
+            del_btn.pack(side=TOP)
+    
+
+
+
 if __name__ == "__main__":
     main()
+
+
+
     
-    
-    
-    
-    
-    
-    class hello:
-    	name=None
-    	_age=None
-    	__love=None
-    	
-    	def hello():
-    		pass
-    	def _hi():
-    		pass
-    	def __sit():
-    		pass
     
